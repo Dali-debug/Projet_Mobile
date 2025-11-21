@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/nursery.dart';
+import '../services/chat_service.dart';
 
 enum ScreenType {
   welcome,
@@ -16,10 +17,17 @@ class AppState extends ChangeNotifier {
   ScreenType _currentScreen = ScreenType.auth;
   User? _user;
   Nursery? _selectedNursery;
+  final ChatService _chatService = ChatService();
 
   ScreenType get currentScreen => _currentScreen;
   User? get user => _user;
   Nursery? get selectedNursery => _selectedNursery;
+  ChatService get chatService => _chatService;
+
+  int get unreadMessagesCount {
+    if (_user == null) return 0;
+    return _chatService.getTotalMessagesNonLus(_user!.id);
+  }
 
   void setScreen(ScreenType screen) {
     _currentScreen = screen;
