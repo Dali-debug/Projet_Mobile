@@ -17,4 +17,13 @@ class Directeur extends Utilisateur {
   void envoyerEtatEnfant(Enfant enfant) {}
   void mettreAJourDisponibilite() {}
   void envoyerNotification(NotificationModel n) {}
+  @override
+  void sAuthentifier() {
+    // Implémentation simple : TODO remplacer par logique d'authentification
+  }
+
+  @override
+  void creerCompte() {
+    // Implémentation simple : TODO remplacer par logique de création de compte
+  }
 }

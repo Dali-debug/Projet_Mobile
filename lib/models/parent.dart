@@ -18,4 +18,13 @@ class Parent extends Utilisateur {
   void payerEnLigne(Paiement p) {}
   void consulterEspaceEnfant(Enfant enfant) {}
   void laisserAvis(Avis a) {}
+  @override
+  void sAuthentifier() {
+    // Implémentation basique : TODO remplacer par logique réelle d'authentification
+  }
+
+  @override
+  void creerCompte() {
+    // Implémentation basique : TODO remplacer par logique réelle de création de compte
+  }
 }
