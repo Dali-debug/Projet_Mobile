@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import 'enrollment_screen.dart';
 
 class NurseryDetails extends StatelessWidget {
   const NurseryDetails({super.key});
@@ -423,26 +424,14 @@ class NurseryDetails extends StatelessWidget {
             ),
             child: ElevatedButton(
               onPressed: () {
-                // Show inscription dialog
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Inscription'),
-                    content: const Text(
-                        'Voulez-vous inscrire votre enfant à cette garderie?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Annuler'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          // Process inscription
-                        },
-                        child: const Text('Confirmer'),
-                      ),
-                    ],
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EnrollmentScreen(
+                      nurseryId: nursery.id,
+                      nurseryName: nursery.name,
+                      price: nursery.price,
+                    ),
                   ),
                 );
               },

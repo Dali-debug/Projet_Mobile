@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../models/user.dart';
+import '../utils/validators.dart';
 
 enum AuthMode { signin, signup }
 
@@ -175,8 +176,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) =>
-                            value?.isEmpty ?? true ? 'Champ requis' : null,
+                        validator: Validators.validateEmail,
                       ),
                       const SizedBox(height: 16),
                       if (_mode == AuthMode.signup) ...[
@@ -187,7 +187,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
-                            hintText: '+216 XX XXX XXX',
+                            hintText: '+216 12345678',
                             prefixIcon: const Icon(Icons.phone),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -195,6 +195,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             filled: true,
                             fillColor: Colors.white,
                           ),
+                          validator: Validators.validateTunisianPhone,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -213,8 +214,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) =>
-                            value?.isEmpty ?? true ? 'Champ requis' : null,
+                        validator: Validators.validatePassword,
                       ),
                       const SizedBox(height: 16),
                       if (_mode == AuthMode.signin)
