@@ -7,12 +7,13 @@ enum ScreenType {
   auth,
   parentDashboard,
   nurseryDashboard,
+  nurserySetup,
   search,
   nurseryDetails,
 }
 
 class AppState extends ChangeNotifier {
-  ScreenType _currentScreen = ScreenType.welcome;
+  ScreenType _currentScreen = ScreenType.auth;
   User? _user;
   Nursery? _selectedNursery;
 
@@ -30,14 +31,20 @@ class AppState extends ChangeNotifier {
     if (user.type == UserType.parent) {
       _currentScreen = ScreenType.parentDashboard;
     } else {
-      _currentScreen = ScreenType.nurseryDashboard;
+      // Nursery users go to setup screen first
+      _currentScreen = ScreenType.nurserySetup;
     }
+    notifyListeners();
+  }
+
+  void completeNurserySetup() {
+    _currentScreen = ScreenType.nurseryDashboard;
     notifyListeners();
   }
 
   void logout() {
     _user = null;
-    _currentScreen = ScreenType.welcome;
+    _currentScreen = ScreenType.auth;
     notifyListeners();
   }
 

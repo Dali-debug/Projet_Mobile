@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_state.dart';
-import 'screens/welcome_screen.dart';
+// ...existing code...
 import 'screens/auth_screen.dart';
 import 'screens/parent_dashboard.dart';
 import 'screens/nursery_dashboard.dart';
+import 'screens/nursery_setup_screen.dart';
 import 'screens/nursery_search.dart';
 import 'screens/nursery_details.dart';
 
@@ -56,20 +57,20 @@ class AppNavigator extends StatelessWidget {
 
   Widget _buildCurrentScreen(AppState appState) {
     switch (appState.currentScreen) {
-      case ScreenType.welcome:
-        return const WelcomeScreen();
       case ScreenType.auth:
         return const AuthScreen();
       case ScreenType.parentDashboard:
         return const ParentDashboard();
       case ScreenType.nurseryDashboard:
         return const NurseryDashboard();
+      case ScreenType.nurserySetup:
+        return const NurserySetupScreen();
       case ScreenType.search:
         return const NurserySearch();
       case ScreenType.nurseryDetails:
         return const NurseryDetails();
       default:
-        return const WelcomeScreen();
+        return const AuthScreen();
     }
   }
 }
