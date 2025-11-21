@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../models/user.dart';
+import '../widgets/app_drawer.dart';
 import 'chat_list_screen.dart';
 
 class ParentDashboard extends StatelessWidget {
@@ -12,6 +14,7 @@ class ParentDashboard extends StatelessWidget {
     final user = appState.user;
 
     return Scaffold(
+      drawer: const AppDrawer(userType: UserType.parent),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -29,23 +32,40 @@ class ParentDashboard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        const Text(
-                          'Bonjour,',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                        Builder(
+                          builder: (context) => IconButton(
+                            icon: const Icon(
+                              Icons.menu,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              Scaffold.of(context).openDrawer();
+                            },
                           ),
                         ),
-                        Text(
-                          user?.name ?? 'Parent',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bonjour,',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              user?.name ?? 'Parent',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

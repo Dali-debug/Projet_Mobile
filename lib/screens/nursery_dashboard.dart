@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../models/user.dart';
+import '../widgets/app_drawer.dart';
 import 'chat_list_screen.dart';
 
 class NurseryDashboard extends StatelessWidget {
@@ -68,6 +70,7 @@ class NurseryDashboard extends StatelessWidget {
     ];
 
     return Scaffold(
+      drawer: const AppDrawer(userType: UserType.nursery),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +95,18 @@ class NurseryDashboard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
+                      Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        ),
+                      ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,8 +114,8 @@ class NurseryDashboard extends StatelessWidget {
                             const Text('Tableau de bord',
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 13)),
-                            Text('cabnu',
-                                style: TextStyle(
+                            Text(user?.name ?? 'Garderie',
+                                style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18)),
