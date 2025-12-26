@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../models/nursery.dart';
-import '../models/review.dart';
+import '../services/api_service.dart';
 
 class NurserySearch extends StatefulWidget {
   const NurserySearch({super.key});
@@ -13,64 +13,45 @@ class NurserySearch extends StatefulWidget {
 
 class _NurserySearchState extends State<NurserySearch> {
   final _searchController = TextEditingController();
+  List<Nursery> _nurseries = [];
+  bool _isLoading = true;
 
-  // Mock data avec images
-  final List<Nursery> _nurseries = [
-    Nursery(
-      id: '1',
-      name: '15 Avenue Habib Bourguiba, Tunis',
-      address: '15 Avenue Habib Bourguiba, Tunis',
-      distance: 0.8,
-      rating: 4.8,
-      reviewCount: 124,
-      price: 350,
-      availableSpots: 3,
-      totalSpots: 20,
-      hours: '7:00 - 18:00',
-      photo:
-          'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400',
-      description: 'Garderie moderne avec programme bilingue français-arabe',
-      activities: ['Musique', 'Art', 'Sport', 'Langues'],
-      staff: 8,
-      ageRange: '3 mois - 5 ans',
-    ),
-    Nursery(
-      id: '2',
-      name: '42 Rue de la République, Ariana',
-      address: '42 Rue de la République, Ariana',
-      distance: 1.5,
-      rating: 4.6,
-      reviewCount: 89,
-      price: 320,
-      availableSpots: 5,
-      totalSpots: 25,
-      hours: '7:30 - 17:30',
-      photo: 'https://images.unsplash.com/photo-1544776193-352d25ca82cd?w=400',
-      description: 'Espace lumineux et sécurisé pour vos enfants',
-      activities: ['Éveil musical', 'Peinture', 'Jeux éducatifs'],
-      staff: 6,
-      ageRange: '6 mois - 4 ans',
-    ),
-    Nursery(
-      id: '3',
-      name: 'Les Petits Génies',
-      address: 'La Marsa, Tunis',
-      distance: 2.3,
-      rating: 4.9,
-      reviewCount: 156,
-      price: 420,
-      availableSpots: 2,
-      totalSpots: 30,
-      hours: '7:00 - 18:30',
-      photo:
-          'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400',
-      description:
-          'Programme d\'excellence pour l\'épanouissement de votre enfant',
-      activities: ['Montessori', 'Yoga', 'Anglais', 'Sciences'],
-      staff: 10,
-      ageRange: '1 - 5 ans',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadGarderies();
+  }
+
+  Future<void> _loadGarderies() async {
+    try {
+      final garderies = await ApiService.getGarderies();
+      setState(() {
+        _nurseries = garderies.map((g) => Nursery(
+          id: g['idgarderie'].toString(),
+          name: g['nom'] ?? '',
+          address: g['adresse'] ?? '',
+          distance: 0.0, // TODO: Calculate distance
+          rating: 4.5, // TODO: Calculate from reviews
+          reviewCount: 0, // TODO: Get from database
+          price: (g['tarif'] ?? 0.0).toDouble(),
+          availableSpots: (g['disponibilite'] ?? 0).toInt(),
+          totalSpots: (g['disponibilite'] ?? 0).toInt(),
+          hours: '7:00 - 18:00', // TODO: Add to database
+          photo: g['photo'] ?? '',
+          description: g['description'] ?? '',
+          activities: [], // TODO: Get from database
+          staff: 0, // TODO: Add to database
+          ageRange: '1 - 5 ans', // TODO: Add to database
+        )).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Erreur lors du chargement des garderies: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -189,7 +170,11 @@ class _NurserySearchState extends State<NurserySearch> {
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Text(
-                          '${_nurseries.length} garderies trouvées',
+                          _isLoading 
+                            ? 'Chargement...' 
+                            : _nurseries.isEmpty
+                              ? 'Aucune garderie trouvée'
+                              : '${_nurseries.length} garderie${_nurseries.length > 1 ? 's' : ''} trouvée${_nurseries.length > 1 ? 's' : ''}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -198,17 +183,52 @@ class _NurserySearchState extends State<NurserySearch> {
                         ),
                       ),
                       Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          itemCount: _nurseries.length,
-                          itemBuilder: (context, index) {
-                            final nursery = _nurseries[index];
-                            return _NurseryCard(
-                              nursery: nursery,
-                              onTap: () => appState.selectNursery(nursery),
-                            );
-                          },
-                        ),
+                        child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(),
+                            )
+                          : _nurseries.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.search_off,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Aucune garderie disponible',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Les nouvelles garderies apparaîtront ici',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                itemCount: _nurseries.length,
+                                itemBuilder: (context, index) {
+                                  final nursery = _nurseries[index];
+                                  return _NurseryCard(
+                                    nursery: nursery,
+                                    onTap: () => appState.selectNursery(nursery),
+                                  );
+                                },
+                              ),
                       ),
                     ],
                   ),

@@ -1,10 +1,10 @@
-// ...existing code...
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import '../providers/app_state.dart';
+import '../services/api_service.dart';
 
 class NurserySetupScreen extends StatefulWidget {
   const NurserySetupScreen({super.key});
@@ -134,19 +134,72 @@ class _NurserySetupScreenState extends State<NurserySetupScreen> {
     }
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      // Complete the setup and navigate to nursery dashboard
-      Provider.of<AppState>(context, listen: false).completeNurserySetup();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil de garderie créé avec succès !'),
-          backgroundColor: Color(0xFF10B981),
-        ),
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
+
+      try {
+        final appState = Provider.of<AppState>(context, listen: false);
+        final user = appState.user;
+
+        if (user != null) {
+          // Créer la garderie avec les données du formulaire
+          final totalPlaces = double.tryParse(_totalSpotsController.text) ?? 0.0;
+          final result = await ApiService.createGarderie(
+            nom: _nurseryNameController.text,
+            adresse: _addressController.text,
+            tarif: double.tryParse(_priceController.text) ?? 0.0,
+            disponibilite: totalPlaces, // Initialement toutes les places sont disponibles
+            description: _descriptionController.text,
+            directeurId: user.id,
+            nombrePlaces: totalPlaces.toInt(), // Ajouter le nombre total de places
+          );
+
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading
+
+          if (result != null) {
+            // Complete the setup and navigate to nursery dashboard
+            appState.completeNurserySetup();
+
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profil de garderie créé avec succès !'),
+                backgroundColor: Color(0xFF10B981),
+              ),
+            );
+          } else {
+            _showError('Erreur lors de la création de la garderie');
+          }
+        }
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading
+        _showError('Erreur de connexion au serveur');
+      }
     }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

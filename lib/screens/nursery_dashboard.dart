@@ -1,42 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../models/user.dart';
+import '../models/utilisateur.dart';
 import '../widgets/app_drawer.dart';
+import '../services/api_service.dart';
 import 'chat_list_screen.dart';
 
-class NurseryDashboard extends StatelessWidget {
+class NurseryDashboard extends StatefulWidget {
   const NurseryDashboard({super.key});
+
+  @override
+  State<NurseryDashboard> createState() => _NurseryDashboardState();
+}
+
+class _NurseryDashboardState extends State<NurseryDashboard> {
+  Map<String, dynamic>? _garderieInfo;
+  List<Map<String, dynamic>> _enfantsInscrits = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final user = appState.user;
+    
+    if (user != null) {
+      // Charger les informations de la garderie
+      final garderie = await ApiService.getGarderieByDirecteur(user.id);
+      
+      List<Map<String, dynamic>> enfants = [];
+      if (garderie != null) {
+        // Charger les enfants inscrits
+        enfants = await ApiService.getEnfantsByGarderie(garderie['idgarderie']);
+      }
+      
+      setState(() {
+        _garderieInfo = garderie;
+        _enfantsInscrits = enfants;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final user = appState.user;
 
-    // Mock data for demonstration
-    final int enrolled = 18;
-    final int totalSpots = 20;
-    final int revenue = 6300;
-    final List<Map<String, String>> requests = [
-      {
-        'name': 'Youssef Mansour',
-        'parent': 'Fatma Mansour',
-        'date': '13/11/2024',
-        'status': 'En attente',
-      },
-      {
-        'name': 'Lina Gharbi',
-        'parent': 'Ahmed Gharbi',
-        'date': '13/11/2024',
-        'status': 'En attente',
-      },
-      {
-        'name': 'Adam Ben Said',
-        'parent': 'Sabrina Ben Said',
-        'date': '13/11/2024',
-        'status': 'En attente',
-      },
-    ];
+    // Calculate stats from actual data
+    final int enrolled = _enfantsInscrits.length;
+    final int totalSpots = _garderieInfo?['disponibilite']?.toInt() ?? 0;
+    final double tarif = _garderieInfo?['tarif']?.toDouble() ?? 0.0;
+    final int revenue = (enrolled * tarif).toInt();
+    
+    final List<Map<String, String>> requests = [];
     final List<Map<String, String>> program = [
       {
         'time': '09:00',
@@ -70,8 +95,41 @@ class NurseryDashboard extends StatelessWidget {
     ];
 
     return Scaffold(
-      drawer: const AppDrawer(userType: UserType.nursery),
-      body: SingleChildScrollView(
+      drawer: const AppDrawer(userType: UtilisateurType.garderie),
+      body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _garderieInfo == null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aucune garderie trouvée',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Veuillez configurer votre garderie',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -114,7 +172,7 @@ class NurseryDashboard extends StatelessWidget {
                             const Text('Tableau de bord',
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 13)),
-                            Text(user?.name ?? 'Garderie',
+                            Text(user?.nom ?? 'Garderie',
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -132,7 +190,7 @@ class NurseryDashboard extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ChatListScreen(
-                                    userId: user?.id ?? 'directeur1',
+                                    userId: user?.id.toString() ?? 'directeur1',
                                     userType: 'directeur',
                                   ),
                                 ),
@@ -212,24 +270,64 @@ class NurseryDashboard extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Registration requests
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Demandes d\'inscription (5)',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  TextButton(onPressed: () {}, child: const Text('Tout voir')),
-                ],
+            if (requests.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.inbox,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aucune demande d\'inscription',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Les nouvelles demandes apparaîtront ici',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Demandes d\'inscription (${requests.length})',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    TextButton(onPressed: () {}, child: const Text('Tout voir')),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: requests.map((req) => _RequestCard(req)).toList(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: requests.map((req) => _RequestCard(req)).toList(),
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 16),
 
             // Daily program
@@ -248,6 +346,98 @@ class NurseryDashboard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Enfants inscrits
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Enfants inscrits ($enrolled)',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            ),
+            if (_enfantsInscrits.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.child_care,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aucun enfant inscrit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Les enfants inscrits apparaîtront ici',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: _enfantsInscrits.map((enfant) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFF00BFA5),
+                        child: Text(
+                          enfant['nom']?.toString().substring(0, 1).toUpperCase() ?? '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        enfant['nom']?.toString() ?? 'Inconnu',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${enfant['age']} ans • Parent: ${enfant['parent_nom'] ?? 'N/A'}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: enfant['parent_telephone'] != null
+                        ? IconButton(
+                            icon: const Icon(Icons.phone, color: Color(0xFF00BFA5)),
+                            onPressed: () {
+                              // TODO: Appeler le parent
+                            },
+                          )
+                        : null,
+                    ),
+                  )).toList(),
+                ),
+              ),
             const SizedBox(height: 16),
 
             // Quick actions
