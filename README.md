@@ -1,4 +1,4 @@
-# JINEN - Smart Farm Irrigation App (Flutter)
+# JINEN - Application de Gestion de Garderie (Flutter)
 
 A Flutter application for finding and managing daycare/nursery services (Garderie).
 
@@ -28,21 +28,25 @@ flutter pub get
 ### 3. Run the App
 
 For Android:
+
 ```bash
 flutter run -d android
 ```
 
 For iOS (macOS only):
+
 ```bash
 flutter run -d ios
 ```
 
 For Web:
+
 ```bash
 flutter run -d chrome
 ```
 
 For Windows:
+
 ```bash
 flutter run -d windows
 ```
@@ -50,16 +54,19 @@ flutter run -d windows
 ### 4. Build Release Version
 
 For Android:
+
 ```bash
 flutter build apk --release
 ```
 
 For iOS:
+
 ```bash
 flutter build ios --release
 ```
 
 For Web:
+
 ```bash
 flutter build web --release
 ```
@@ -101,7 +108,7 @@ This app uses the `provider` package for state management. The main app state is
 
 ## Original Design
 
-The original design is available at: https://www.figma.com/design/nyqz406RYiODaxJS88uq99/Smart-Farm-Irrigation-App
+The original design is available at: https://www.figma.com/design/nyqz406RYiODaxJS88uq99/Smart-Farm-Irrigation-App (Note: This was the original design reference from another project)
 
 ## License
 
