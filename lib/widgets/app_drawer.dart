@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../models/user.dart';
+import '../models/utilisateur.dart';
 
 class AppDrawer extends StatelessWidget {
-  final UserType userType;
+  final UtilisateurType userType;
 
   const AppDrawer({
     super.key,
@@ -37,7 +37,7 @@ class AppDrawer extends StatelessWidget {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
-                  user?.name.substring(0, 1).toUpperCase() ?? 'U',
+                  user?.nom.substring(0, 1).toUpperCase() ?? 'U',
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -46,7 +46,7 @@ class AppDrawer extends StatelessWidget {
                 ),
               ),
               accountName: Text(
-                user?.name ?? 'Utilisateur',
+                user?.nom ?? 'Utilisateur',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -73,7 +73,7 @@ class AppDrawer extends StatelessWidget {
               },
             ),
 
-            if (userType == UserType.parent) ...[
+            if (userType == UtilisateurType.parent) ...[
               _buildMenuItem(
                 context,
                 icon: Icons.child_care,
@@ -104,7 +104,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ],
 
-            if (userType == UserType.nursery) ...[
+            if (userType == UtilisateurType.garderie) ...[
               _buildMenuItem(
                 context,
                 icon: Icons.dashboard,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
+import '../models/utilisateur.dart';
 import '../models/nursery.dart';
 import '../services/chat_service.dart';
+import '../services/api_service.dart';
 
 enum ScreenType {
   welcome,
@@ -15,18 +16,18 @@ enum ScreenType {
 
 class AppState extends ChangeNotifier {
   ScreenType _currentScreen = ScreenType.auth;
-  User? _user;
+  Utilisateur? _user;
   Nursery? _selectedNursery;
   final ChatService _chatService = ChatService();
 
   ScreenType get currentScreen => _currentScreen;
-  User? get user => _user;
+  Utilisateur? get user => _user;
   Nursery? get selectedNursery => _selectedNursery;
   ChatService get chatService => _chatService;
 
   int get unreadMessagesCount {
     if (_user == null) return 0;
-    return _chatService.getTotalMessagesNonLus(_user!.id);
+    return _chatService.getTotalMessagesNonLus(_user!.id.toString());
   }
 
   void setScreen(ScreenType screen) {
@@ -34,13 +35,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setUser(User user) {
+  void setUser(Utilisateur user) async {
     _user = user;
-    if (user.type == UserType.parent) {
+    if (user.type == UtilisateurType.parent) {
       _currentScreen = ScreenType.parentDashboard;
     } else {
-      // Nursery users go to setup screen first
-      _currentScreen = ScreenType.nurserySetup;
+      // Vérifier si le directeur/garderie a déjà configuré sa garderie
+      final garderie = await ApiService.getGarderieByDirecteur(user.id);
+      if (garderie != null) {
+        // Garderie déjà configurée, aller au dashboard
+        _currentScreen = ScreenType.nurseryDashboard;
+      } else {
+        // Nouvelle garderie, aller au setup
+        _currentScreen = ScreenType.nurserySetup;
+      }
     }
     notifyListeners();
   }

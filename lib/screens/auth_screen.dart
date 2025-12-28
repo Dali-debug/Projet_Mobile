@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../models/user.dart';
+import '../models/utilisateur.dart';
+import '../models/parent.dart';
+import '../models/directeur.dart';
 import '../utils/validators.dart';
+import '../services/api_service.dart';
 
 enum AuthMode { signin, signup }
 
@@ -15,7 +18,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   AuthMode _mode = AuthMode.signin;
-  UserType _userType = UserType.parent;
+  UtilisateurType _userType = UtilisateurType.parent;
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
@@ -32,20 +35,117 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      // Mock authentication
-      final user = User(
-        id: '1',
-        name:
-            _nameController.text.isEmpty ? 'Utilisateur' : _nameController.text,
-        email: _emailController.text,
-        type: _userType,
-        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      Provider.of<AppState>(context, listen: false).setUser(user);
+      try {
+        if (_mode == AuthMode.signin) {
+          // Authentification
+          final result = await ApiService.login(
+            _emailController.text,
+            _passwordController.text,
+          );
+
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading
+
+          if (result != null) {
+            // Créer l'instance de l'utilisateur à partir des données de l'API
+            final user = result['type'] == 'parent'
+                ? Parent(
+                    id: result['id'],
+                    nom: result['nom'],
+                    email: result['email'],
+                    motDePasse: result['motdepasse'],
+                    type: UtilisateurType.parent,
+                  )
+                : Directeur(
+                    id: result['id'],
+                    nom: result['nom'],
+                    email: result['email'],
+                    motDePasse: result['motdepasse'],
+                    type: result['type'] == 'directeur'
+                        ? UtilisateurType.directeur
+                        : UtilisateurType.garderie,
+                  );
+
+            Provider.of<AppState>(context, listen: false).setUser(user);
+          } else {
+            _showError('Email ou mot de passe incorrect');
+          }
+        } else {
+          // Inscription
+          final typeString = _userType == UtilisateurType.parent
+              ? 'parent'
+              : _userType == UtilisateurType.directeur
+                  ? 'directeur'
+                  : 'garderie';
+
+          final result = await ApiService.createUtilisateur(
+            nom: _nameController.text.isEmpty
+                ? 'Utilisateur'
+                : _nameController.text,
+            email: _emailController.text,
+            motDePasse: _passwordController.text,
+            type: typeString,
+            telephone:
+                _phoneController.text.isEmpty ? null : _phoneController.text,
+          );
+
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading
+
+          if (result != null) {
+            // Créer l'instance de l'utilisateur
+            final user = _userType == UtilisateurType.parent
+                ? Parent(
+                    id: result['id'],
+                    nom: result['nom'],
+                    email: result['email'],
+                    motDePasse: result['motdepasse'],
+                    type: UtilisateurType.parent,
+                  )
+                : Directeur(
+                    id: result['id'],
+                    nom: result['nom'],
+                    email: result['email'],
+                    motDePasse: result['motdepasse'],
+                    type: _userType,
+                  );
+
+            Provider.of<AppState>(context, listen: false).setUser(user);
+          } else {
+            _showError('Erreur lors de la création du compte');
+          }
+        }
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading
+        _showError('Erreur de connexion au serveur');
+      }
     }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -113,10 +213,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: _UserTypeButton(
                           icon: Icons.person,
                           label: 'Parent',
-                          isSelected: _userType == UserType.parent,
+                          isSelected: _userType == UtilisateurType.parent,
                           color: const Color(0xFF10B981),
-                          onTap: () =>
-                              setState(() => _userType = UserType.parent),
+                          onTap: () => setState(
+                              () => _userType = UtilisateurType.parent),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -124,10 +224,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: _UserTypeButton(
                           icon: Icons.child_care,
                           label: 'Garderie',
-                          isSelected: _userType == UserType.nursery,
+                          isSelected: _userType == UtilisateurType.garderie,
                           color: const Color(0xFF3B82F6),
-                          onTap: () =>
-                              setState(() => _userType = UserType.nursery),
+                          onTap: () => setState(
+                              () => _userType = UtilisateurType.garderie),
                         ),
                       ),
                     ],

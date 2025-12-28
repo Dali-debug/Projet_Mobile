@@ -1,12 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../models/user.dart';
+import '../models/utilisateur.dart';
 import '../widgets/app_drawer.dart';
+import '../services/api_service.dart';
 import 'chat_list_screen.dart';
 
-class ParentDashboard extends StatelessWidget {
+class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
+
+  @override
+  State<ParentDashboard> createState() => _ParentDashboardState();
+}
+
+class _ParentDashboardState extends State<ParentDashboard> {
+  List<Map<String, dynamic>> _enfants = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEnfants();
+  }
+
+  Future<void> _loadEnfants() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final user = appState.user;
+    
+    if (user != null) {
+      final enfants = await ApiService.getEnfantsByParent(user.id);
+      setState(() {
+        _enfants = enfants;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +46,7 @@ class ParentDashboard extends StatelessWidget {
     final user = appState.user;
 
     return Scaffold(
-      drawer: const AppDrawer(userType: UserType.parent),
+      drawer: const AppDrawer(userType: UtilisateurType.parent),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -58,7 +90,7 @@ class ParentDashboard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              user?.name ?? 'Parent',
+                              user?.nom ?? 'Parent',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -81,7 +113,7 @@ class ParentDashboard extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => ChatListScreen(
-                                      userId: user?.id ?? 'parent1',
+                                      userId: user?.id.toString() ?? 'parent1',
                                       userType: 'parent',
                                     ),
                                   ),
@@ -206,126 +238,91 @@ class ParentDashboard extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
 
-                        // Child Card Example
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF00BFA5),
-                                  borderRadius: BorderRadius.circular(12),
+                        // Afficher les enfants ou un message vide
+                        if (_isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+                        else if (_enfants.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
                                 ),
-                                child: const Center(
-                                  child: Text(
-                                    'S',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.child_care,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Aucun enfant enregistré',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Ajoutez votre premier enfant pour commencer',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    // TODO: Navigate to add child screen
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Ajouter un enfant'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF00BFA5),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          '3 ans',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF00BFA5)
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: const Text(
-                                            'Actif',
-                                            style: TextStyle(
-                                              color: Color(0xFF00BFA5),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: const [
-                                        Icon(Icons.location_on,
-                                            size: 14, color: Colors.red),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Les Petits Anges',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: const [
-                                        Icon(Icons.palette,
-                                            size: 14, color: Colors.purple),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Activités créatives',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: const [
-                                        Icon(Icons.schedule,
-                                            size: 14, color: Colors.grey),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Prochaine prise en charge: 17:00',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                              ],
+                            ),
+                          )
+                        else
+                          ...List.generate(_enfants.length, (index) {
+                            final enfant = _enfants[index];
+                            return Column(
+                              children: [
+                                _EnfantCard(
+                                  enfant: enfant,
+                                  onTap: () {
+                                    // TODO: Navigate to child details
+                                  },
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
+                                if (index < _enfants.length - 1)
+                                  const SizedBox(height: 12),
+                              ],
+                            );
+                          }),
 
                         const SizedBox(height: 12),
 
@@ -459,6 +456,121 @@ class ParentDashboard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EnfantCard extends StatelessWidget {
+  final Map<String, dynamic> enfant;
+  final VoidCallback onTap;
+
+  const _EnfantCard({
+    required this.enfant,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final nom = enfant['nom'] ?? 'Enfant';
+    final age = enfant['age'] ?? 0;
+    final garderieName = enfant['garderie_nom'] ?? '';
+    final initial = nom.isNotEmpty ? nom[0].toUpperCase() : 'E';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: const Color(0xFF00BFA5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          nom,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00BFA5).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$age ans',
+                          style: const TextStyle(
+                            color: Color(0xFF00BFA5),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (garderieName.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 14, color: Colors.red),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            garderieName,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
