@@ -77,3 +77,7 @@ package-lock.json
 index.html
 vite.config.ts
 src/
+
+# Backend node_modules
+backend/node_modules/
+backend/package-lock.json

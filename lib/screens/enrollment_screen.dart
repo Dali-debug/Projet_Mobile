@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../utils/validators.dart';
+import '../services/api_service.dart';
+import '../providers/app_state.dart';
 
 class EnrollmentScreen extends StatefulWidget {
   final String nurseryId;
@@ -98,16 +101,52 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
     }
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Enregistrer l'inscription
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Inscription confirmée avec succès !'),
-          backgroundColor: Color(0xFF10B981),
-        ),
+      // Récupérer l'utilisateur connecté
+      final appState = Provider.of<AppState>(context, listen: false);
+      final user = appState.user;
+      
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur: utilisateur non connecté'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      // Calculer l'âge depuis la date de naissance
+      final birthDate = DateFormat('MM/dd/yyyy').parse(_birthDateController.text);
+      final age = DateTime.now().difference(birthDate).inDays ~/ 365;
+      
+      // Créer l'enfant avec l'association à la garderie
+      final result = await ApiService.createEnfant(
+        nom: _childNameController.text,
+        age: age,
+        parentId: user.id,
+        garderieId: int.parse(widget.nurseryId),
       );
-      Navigator.pop(context);
+      
+      if (result != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Inscription confirmée avec succès !'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+        Navigator.pop(context, true); // Retourner true pour indiquer le succès
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'inscription'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

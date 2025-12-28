@@ -423,8 +423,8 @@ class NurseryDetails extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => EnrollmentScreen(
@@ -434,6 +434,11 @@ class NurseryDetails extends StatelessWidget {
                     ),
                   ),
                 );
+                
+                // Si l'inscription est réussie, retourner au parent dashboard
+                if (result == true && context.mounted) {
+                  appState.setScreen(ScreenType.parentDashboard);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,

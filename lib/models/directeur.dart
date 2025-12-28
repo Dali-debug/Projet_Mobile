@@ -8,7 +8,9 @@ class Directeur extends Utilisateur {
     required String nom,
     required String email,
     required String motDePasse,
-  }) : super(id: id, nom: nom, email: email, motDePasse: motDePasse);
+    required UtilisateurType type,
+  }) : super(
+            id: id, nom: nom, email: email, motDePasse: motDePasse, type: type);
 
   void creerProfilGarderie() {}
   void mettreAJourProfil() {}
