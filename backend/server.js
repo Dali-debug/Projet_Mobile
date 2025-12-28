@@ -16,11 +16,15 @@ const utilisateurRoutes = require('./routes/utilisateur');
 const garderieRoutes = require('./routes/garderie');
 const enfantRoutes = require('./routes/enfant');
 const messageRoutes = require('./routes/message');
+const paiementRoutes = require('./routes/paiement');
+const activiteRoutes = require('./routes/activite');
 
 app.use('/api/utilisateurs', utilisateurRoutes);
 app.use('/api/garderies', garderieRoutes);
 app.use('/api/enfants', enfantRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/paiements', paiementRoutes);
+app.use('/api/activites', activiteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -31,3 +35,4 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
 });
+
