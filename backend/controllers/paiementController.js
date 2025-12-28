@@ -29,15 +29,12 @@ const getPaiementById = async (req, res) => {
 };
 
 // Get payments by parent ID (if the database schema supports this)
+// Note: Current paiement table doesn't have parent_id column
 const getPaiementsByParent = async (req, res) => {
   try {
     const { parentId } = req.params;
-    // Assuming there's a parent_id column in paiement table
-    const result = await pool.query(
-      'SELECT * FROM paiement WHERE parent_id = $1 ORDER BY datepaiement DESC',
-      [parentId]
-    );
-    res.json(result.rows);
+    // This endpoint is not implemented as the paiement table doesn't have parent_id
+    res.status(501).json({ error: 'Fonctionnalité non implémentée - la table paiement n\'a pas de colonne parent_id' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -62,14 +59,13 @@ const getPaiementsByStatus = async (req, res) => {
 // Create payment
 const createPaiement = async (req, res) => {
   try {
-    const { montant, datePaiement, statut, parent_id, enfant_id, garderie_id } = req.body;
+    const { montant, datePaiement, statut } = req.body;
     
     // Validation
     if (!montant || !datePaiement || !statut) {
       return res.status(400).json({ error: 'Les champs montant, datePaiement et statut sont obligatoires' });
     }
 
-    // Build query based on available columns
     const result = await pool.query(
       'INSERT INTO paiement (montant, datepaiement, statut) VALUES ($1, $2, $3) RETURNING *',
       [montant, datePaiement, statut]

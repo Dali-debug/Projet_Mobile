@@ -215,6 +215,7 @@ class DataService extends BaseService {
   }
 
   /// Get payments by parent ID
+  /// Note: This endpoint is not implemented in the backend as the paiement table doesn't have parent_id
   Future<List<Map<String, dynamic>>> getPaiementsByParent(int parentId) async {
     try {
       final response = await get('/paiements/by-parent/$parentId');
@@ -224,7 +225,8 @@ class DataService extends BaseService {
       return [];
     } catch (e) {
       print('Erreur lors de la récupération des paiements du parent: $e');
-      rethrow;
+      // Return empty list if endpoint is not implemented
+      return [];
     }
   }
 
@@ -248,9 +250,6 @@ class DataService extends BaseService {
     required double montant,
     required String datePaiement,
     required String statut,
-    int? parentId,
-    int? enfantId,
-    int? garderieId,
   }) async {
     try {
       final body = {
@@ -258,18 +257,6 @@ class DataService extends BaseService {
         'datePaiement': datePaiement,
         'statut': statut,
       };
-
-      if (parentId != null) {
-        body['parent_id'] = parentId;
-      }
-
-      if (enfantId != null) {
-        body['enfant_id'] = enfantId;
-      }
-
-      if (garderieId != null) {
-        body['garderie_id'] = garderieId;
-      }
 
       final response = await post('/paiements', body);
       return response;

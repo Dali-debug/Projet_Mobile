@@ -187,6 +187,8 @@ Get all payments
 #### GET `/paiements/by-parent/:parentId`
 Get payments by parent ID
 
+**Note:** This endpoint is not currently implemented as the paiement table doesn't have a parent_id column. Returns 501 Not Implemented.
+
 #### GET `/paiements/by-status/:statut`
 Get payments by status (payé, en attente)
 
